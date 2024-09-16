@@ -16,28 +16,23 @@ Usage:
         Edit a config with the default editor
     ";
 const FSF_CONFIG_PATH: &str = "~/.config/fsf";
-
-fn expand_tilde(path: &str) -> String {
-    if path.starts_with("~") {
-        if let Some(home) = env::home_dir() {
+fn expand_tilde(path: &str) -> String{
+    if path.starts_with("~"){
+        if let Some(home) = env::home_dir(){
             return path.replacen("~", home.to_str().unwrap(), 1);
         }
     }
-    path.to_string()
+    return path.to_string();
 }
-
 fn touch(path: &str){
     let expanded_path = expand_tilde(path);
     let path = Path::new(&expanded_path);
-    if let Some(parent) = path.parent() {
-        if !parent.exists(){
-            let _ = create_dir_all(parent);
-        }
+
+    if let Some(parent) = path.parent(){
+        let _ = create_dir_all(parent);
     }
-    let _ = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(path);
+    let _ =OpenOptions::new().create(true).write(true).open(path);
+
 }
 fn help() -> (){
     println!("{}", INFO);
@@ -45,7 +40,7 @@ fn help() -> (){
 
 fn set_default_editor(editors_name: &str){
     touch(FSF_CONFIG_PATH);
-    println!("default editor successfully set to {}", editors_name);
+    println!("Successfully set default editor to {editors_name}");
 }
 
 fn main() {
@@ -59,3 +54,4 @@ fn main() {
         set_default_editor(&args[2]);
     }
 }
+
