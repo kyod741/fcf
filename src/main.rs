@@ -1,8 +1,26 @@
 use std::env;
 use std::fs::create_dir_all;
+use std::fs;
 use std::path::Path;
 use std::fs::OpenOptions;
+use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
+use serde_json::Error as SerdeError;
 
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+    editor: Option<String>,
+    bindings: Option<HashMap<String, String>>,
+}
+
+impl Config {
+    fn new() -> Config {
+        Config{
+            editor: None,
+            bindings: None,
+        }
+    }
+}
 const INFO: &str = "
 Usage:
 
@@ -31,7 +49,7 @@ fn touch(path: &str){
     if let Some(parent) = path.parent(){
         let _ = create_dir_all(parent);
     }
-    let _ =OpenOptions::new().create(true).write(true).open(path);
+    let _ = OpenOptions::new().create(true).write(true).open(path);
 
 }
 fn help() -> (){
@@ -40,6 +58,15 @@ fn help() -> (){
 
 fn set_default_editor(editors_name: &str){
     touch(FSF_CONFIG_PATH);
+    let config_file: &str = &fs::read_to_string(expand_tilde(FSF_CONFIG_PATH)).expect("Cannot read the config file");
+    let parse: Result<Config, SerdeError> = serde_json::from_str(&config_file);
+    let config: Config = match parse {
+        Ok(content) => content,
+        Err(ref e) if e.is_eof() => Config::new(),
+        Err(e) => panic!("{e}"),
+    };
+
+
     println!("Successfully set default editor to {editors_name}");
 }
 
