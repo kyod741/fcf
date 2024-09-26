@@ -108,7 +108,7 @@ fn add_change_binding(name: &str, file_path: &str){
         .and_modify(|counter| *counter = file_path.to_string())
         .or_insert(file_path.to_string());
     write_config(&config);
-
+    println!("Successfully binded {name} with {file_path}");
 }
 
 fn remove_binding(name: &str){
@@ -127,7 +127,7 @@ fn remove_binding(name: &str){
             _ => (),
     };
     write_config(&config);
-
+    println!("Successfully removed {name} binding");
 
 }
 
