@@ -7,6 +7,45 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use serde_json::Error as SerdeError;
 use std::process::Command;
+use clap::{Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(about=None, long_about=None)]
+struct Args {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Edit a specific config file
+    #[command(alias = "e")]
+    Edit {
+        /// The key binded to the config file to edit
+        key: String,
+    },
+    /// Set the default editor
+    Editor {
+        /// The name of the editor
+        editor: String,
+    },
+    /// Bind a key to a file
+    #[command(alias = "b")]
+    Bind {
+        /// The key to bind
+        key: String,
+        /// The file to bind to the key
+        file: String,
+    },
+    /// Remove a binding
+    #[command(alias = "r")]
+    RemoveBinding {
+        /// The key to remove the binding from
+        key: String,
+    },
+    /// Print the current configuration
+    Print,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
@@ -22,22 +61,6 @@ impl Config {
         }
     }
 }
-const INFO: &str = "
-Usage:
-
-    --help, -h, help
-        Prints help(the same thing you are seeing right now)
-    bind, b <name> <config_file_path>
-        Binds a name with configs file path.
-    remove_binding, r <name>
-        Removes a binding with provided name
-    editor <editors_name>
-        Configures the default editor that will be used for configuring
-    edit <name>
-        Edit a config with the default editor
-    print
-        Print the current state of the config
-    ";
 const FSF_CONFIG_PATH: &str = "~/.config/fcf";
 
 fn expand_tilde(path: &str) -> String{
@@ -57,9 +80,6 @@ fn touch(path: &str) -> (){
     }
     let _ = OpenOptions::new().create(true).write(true).open(path);
 
-}
-fn help() -> (){
-    println!("{}", INFO);
 }
 
 fn parse_config() -> Config{
@@ -96,7 +116,7 @@ fn set_default_editor(editors_name: &str) -> (){
     println!("Successfully set default editor to {editors_name}");
 }
 
-fn add_change_binding(name: &str, file_path: &str){
+fn bind(name: &str, file_path: &str){
     let mut config: Config = parse_config();
     if config.bindings.is_none() {
         config.bindings = Some(HashMap::new());
@@ -104,9 +124,7 @@ fn add_change_binding(name: &str, file_path: &str){
     config.bindings
         .as_mut()
         .expect("This shouldn't have happened")
-        .entry(name.to_string())
-        .and_modify(|counter| *counter = file_path.to_string())
-        .or_insert(file_path.to_string());
+        .insert(name.to_string(), file_path.to_string());
     write_config(&config);
     println!("Successfully binded {name} with {file_path}");
 }
@@ -118,7 +136,7 @@ fn remove_binding(name: &str){
     }
     match config.bindings
         .as_mut()
-        .expect("This shouldn't have happened")
+        .expect("Borrowing bindings HashMap failed")
         .remove_entry(name){
             None => {
                 println!("This binding does not exist");
@@ -136,7 +154,7 @@ fn edit(name: &str) -> (){
     let _ = Command::new(config.editor
             .expect("you have not configured your default editor"))
         .arg(config.bindings
-            .expect("This shouldn't have happened")
+            .expect("Failed to retrieve bindings")
             .get(name)
             .expect("The binding to {name} does not exist}"))
         .status();
@@ -148,28 +166,30 @@ fn print_config() -> (){
     touch(FSF_CONFIG_PATH);
     let config_file = fs::read_to_string(expand_tilde(FSF_CONFIG_PATH)).expect("Cannot read the config file");
     if config_file == "" {
-        println!("the config is currently empty");
+        println!("The config is currently empty");
     }else{
-        println!("this is the config \n {config_file}");
+        println!("This is the config \n {config_file}");
     }
 }
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    // empty args
-    if args.len() == 1{
-        help();
-    } else if args.len() >= 3 && args[1] == "edit" {
-        edit(&args[2]);
-    } else if args.len() >= 3 && args[1] == "editor" {
-        set_default_editor(&args[2]);
-    }else if args.len() >= 4 && (args[1] == "bind" || args[1] == "b") {
-        add_change_binding(&args[2],&args[3]);   
-    } else if args.len() >= 3 && (args[1] == "remove_binding" || args[1] =="r") {
-        remove_binding(&args[2]);
-    } else if args.len() >=2 && args[1] == "print" {
-        print_config();
-    } else if args.len() >=2 && (args[1] == "--help" || args[1] == "-h" || args[1] == "help"){
-        help();
+    let args = Args::parse();
+    match &args.command {
+        Commands::Edit { key } => {
+            edit(&key);
+        },
+        Commands::Editor { editor } => {
+            set_default_editor(&editor);
+        },
+        Commands::Bind { key, file } => {
+            bind(&key, &file);
+        },
+        Commands::RemoveBinding { key } => {
+            remove_binding(&key);
+        },
+        Commands::Print => {
+            print_config();
+        }
+
     }
 }
 
