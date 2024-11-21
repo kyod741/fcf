@@ -3,6 +3,15 @@ name = "fcf"
 version = "0.2.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
+authors = ["Wojciech Zwoliński"] 
+description = "Simple rust cli tool built to make accessing your configs faster"
+rust-version = "1.80.1"
+readme = "README.md"
+repository = "https://git.staszic.waw.pl/kyod/fcf"
+keywords = ["configuration", "config", "cli", "tool"]
+categories = ["command-line-utilities"]
+build = false
+
 
 [dependencies]
 cargo = "0.82.0"
