@@ -1,4 +1,5 @@
 # fcf
+fcf is a simple rust cli tool built to make accessing your configs faster
 
 ## Usage
 
