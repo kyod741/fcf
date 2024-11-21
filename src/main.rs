@@ -1,4 +1,5 @@
 use std::env;
+use std::format;
 use std::fs::create_dir_all;
 use std::fs;
 use std::path::Path;
@@ -126,7 +127,7 @@ fn bind(name: &str, file_path: &str){
         .expect("This shouldn't have happened")
         .insert(name.to_string(), file_path.to_string());
     write_config(&config);
-    println!("Successfully binded {name} with {file_path}");
+    println!("Successfully binded {} with {file_path}", name);
 }
 
 fn remove_binding(name: &str){
@@ -151,12 +152,13 @@ fn remove_binding(name: &str){
 
 fn edit(name: &str) -> (){
     let config: Config = parse_config();
+    let err = format!("The binding to {} does not exist", &name);
     let _ = Command::new(config.editor
             .expect("you have not configured your default editor"))
         .arg(config.bindings
             .expect("Failed to retrieve bindings")
             .get(name)
-            .expect("The binding to {name} does not exist}"))
+            .expect(&err))
         .status();
 
 
