@@ -1,6 +1,6 @@
 [package]
 name = "fcf"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Wojciech Zwoliński"] 
@@ -14,7 +14,6 @@ build = false
 
 
 [dependencies]
-cargo = "0.82.0"
 clap = { version = "4.5.19", features = ["derive"] }
 dirs = "5.0.1"
 serde = { version = "1.0.210", features = ["derive"] }
